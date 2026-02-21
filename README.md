@@ -1,3 +1,27 @@
+# EMulators OpenOCD Fork
+This is a fork of OpenOCD with a custom flash driver for WB32 devices and
+configurations for various WB32 devices. Debugging, Flashing, etc should
+all be working but I need to complete cleaning up the code before submitting
+to upstream. If you run into any issues please open a ticket!
+
+## Example for flashing WB32F10X
+```shell
+openocd -f interface/cmsis-dap.cfg -f target/wb32f10x.cfg \
+   -c "init; halt; flash probe 0" \
+   -c "flash write_image erase firmware.bin 0x08000000" \
+   -c "verify_image firmware.bin 0x08000000" \
+   -c "reset run; shutdown"
+```
+
+## Example for flashing WB32FQ95
+```shell
+openocd -f interface/cmsis-dap.cfg -f target/wb32fq95x.cfg \
+   -c "init; halt; flash probe 0" \
+   -c "flash write_image erase firmware.bin 0x08000000" \
+   -c "verify_image firmware.bin 0x08000000" \
+   -c "reset run; shutdown"
+```
+
 # Welcome to OpenOCD
 
 OpenOCD provides on-chip programming and debugging support with a
