@@ -184,7 +184,7 @@ static const uint32_t wb32_pre_op_chibios[] = {
  * This variant includes an additional check on the chip revision.
  * Use for WB32F10x family if ChibiOS variant doesn't work.
  */
-static const uint32_t wb32_pre_op_vendor[] = {
+static const uint32_t __attribute__((unused)) wb32_pre_op_vendor[] = {
 	0x4FF0E92D, 0xF8D14935, 0xF3C00200, 0x28023083,
 	0x4833D861, 0x62822203, 0x62C2220C, 0xC0C4F8DF,
 	0xF8CC2200, 0x46102000, 0x767AF44F, 0x42B01C40,
@@ -408,8 +408,8 @@ static int wb32f10x_run_pre_op(struct target *target)
 	init_reg_param(&reg_params[0], "sp", 32, PARAM_OUT);
 	buf_set_u32(reg_params[0].value, 0, 32, wa->address + total_size);
 
-	LOG_DEBUG("Running PRE_OP calibration at 0x%08" PRIx32
-		" (SP=0x%08" PRIx32 ")", wa->address, wa->address + total_size);
+	LOG_DEBUG("Running PRE_OP calibration at 0x%08" TARGET_PRIxADDR
+		" (SP=0x%08" TARGET_PRIxADDR ")", wa->address, wa->address + total_size);
 
 	retval = target_run_algorithm(target,
 		0, NULL,           /* no memory arguments */
@@ -779,7 +779,7 @@ static int wb32f10x_write(struct flash_bank *bank, const uint8_t *buffer,
 	if (retval != ERROR_OK)
 		return retval;
 
-	LOG_INFO("Writing %" PRIu32 " bytes at 0x%08" PRIx32, count, bank->base + offset);
+	LOG_INFO("Writing %" PRIu32 " bytes at 0x%08" TARGET_PRIxADDR, count, bank->base + offset);
 
 	uint32_t bytes_written = 0;
 	uint32_t address = bank->base + offset;

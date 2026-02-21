@@ -4,6 +4,13 @@ configurations for various WB32 devices. Debugging, Flashing, etc should
 all be working but I need to complete cleaning up the code before submitting
 to upstream. If you run into any issues please open a ticket!
 
+## To Build
+```shell
+./bootstrap
+./configure --enable-cmsis-dap --enable-cmsis-dap-v2 --enable-internal-jimtcl --enable-internal-libjaylink
+make
+```
+
 ## Example for flashing WB32F10X
 ```shell
 openocd -f interface/cmsis-dap.cfg -f target/wb32f10x.cfg \
