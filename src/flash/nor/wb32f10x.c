@@ -126,6 +126,16 @@
 #define CHIP_ID_WB32F103        0x13
 #define CHIP_ID_WB32F104        0x14
 #define CHIP_ID_WB32F105        0x15
+/*
+ * Hardware testing shows the WB32FQ95 reports chip_id=0x14 (same as
+ * WB32F104) in SYS_ID[23:18].  The driver treats it as WB32F10x and
+ * uses the F10x flash-size table, which returns the correct size for
+ * every flash_code observed on real WB32FQ95 hardware.
+ *
+ * CHIP_ID_WB32FQ95 is retained for any future variant that may report
+ * a non-F10x chip_id; the fallback path assigns this value when
+ * chip_id_raw falls outside the F101-F105 range.
+ */
 #define CHIP_ID_WB32FQ95        0x3A
 
 /* Device-specific data */

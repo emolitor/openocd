@@ -22,23 +22,17 @@ Compatible debug probes: CMSIS-DAP, J-Link, WB-Link PRO (SWD and JTAG).
 make
 ```
 
-## Example: Flashing WB32F10x
+## Example: Flashing Any WB32 Device
 ```shell
-openocd -f interface/cmsis-dap.cfg -f target/wb32f10x.cfg \
+openocd -f interface/cmsis-dap.cfg -f target/wb32.cfg \
    -c "init; halt; flash probe 0" \
    -c "flash write_image erase firmware.bin 0x08000000" \
    -c "verify_image firmware.bin 0x08000000" \
    -c "reset run; shutdown"
 ```
 
-## Example: Flashing WB32FQ95xx
-```shell
-openocd -f interface/cmsis-dap.cfg -f target/wb32fq95x.cfg \
-   -c "init; halt; flash probe 0" \
-   -c "flash write_image erase firmware.bin 0x08000000" \
-   -c "verify_image firmware.bin 0x08000000" \
-   -c "reset run; shutdown"
-```
+The unified `target/wb32.cfg` works for all WB32 families. The flash driver
+auto-detects the chip family and flash size at runtime.
 
 ## WB32 TCL Helper Commands
 
@@ -49,9 +43,31 @@ After connecting to a target, the following commands are available:
 | `wb32_info` | Display device family, SYS_ID, flash/SRAM sizes |
 | `wb32_dump_flash <file> [length]` | Dump flash to file (default 4KB) |
 | `wb32_dump_all_flash <file>` | Dump entire flash (auto-detects size) |
-| `wb32_verify_flash <file>` | Verify flash contents against file |
+| `wb32_verify_flash <file> [offset]` | Verify flash contents against file (default 0x08000000) |
 | `wb32_load_ram <file> [addr]` | Load binary into RAM (default 0x20000000) |
 | `wb32f10x mass_erase <bank>` | Erase entire flash |
+
+The flash driver reports write progress every 64 KB during large writes.
+
+## Known Limitations / TODO
+
+- **WB32FQ95 and WB32F104 are register-identical.** Both report chip_id=0x14
+  in SYS_ID[23:18] (0x40016400). The driver uses the F10x flash-size table
+  for both, which returns correct results for all flash_codes observed on
+  real WB32FQ95 hardware. A single unified `target/wb32.cfg` serves both
+  families.
+
+- **Flash protection not implemented.** `wb32f10x_protect()` returns
+  `ERROR_FLASH_OPER_UNSUPPORTED`. If the WB32 devices have read/write
+  protection features (OTP, RDP, WRP), these could be implemented.
+
+- **SRAM 8 KB case unconfirmed.** The WB32F101 datasheet lists 8 KB SRAM,
+  but the SYS_MEMSZ lookup table only covers 12/20/28/36 KB (codes 0-3).
+  Needs validation on a WB32F101 device.
+
+- **CRC verify falls back to binary compare.** OpenOCD's built-in Cortex-M
+  CRC algorithm times out on WB32 targets. Verification still works via
+  binary compare but is slower.
 
 # Welcome to OpenOCD
 
