@@ -12,6 +12,7 @@
  * Supported devices:
  * WB32F10x series: ARM Cortex-M3 with up to 256KB flash
  * - WB32F101xx: 32-64 KB Flash, 8-20 KB SRAM
+ * - WB32F102xx: 64-128 KB Flash, 12-28 KB SRAM (USB)
  * - WB32F103xx: 64-128 KB Flash, 12-28 KB SRAM
  * - WB32F104xx: 96-256 KB Flash, 20-36 KB SRAM
  * - WB32F105xx: 128-256 KB Flash, 28-36 KB SRAM
@@ -809,6 +810,7 @@ static int wb32f10x_write(struct flash_bank *bank, const uint8_t *buffer,
 
 	uint32_t bytes_written = 0;
 	uint32_t address = bank->base + offset;
+	uint32_t next_progress = WB32_SECTOR_SIZE * 16;  /* report every 64 KB */
 
 	while (bytes_written < count) {
 		uint32_t page_addr = address & ~(WB32_PAGE_SIZE - 1);
@@ -858,6 +860,13 @@ static int wb32f10x_write(struct flash_bank *bank, const uint8_t *buffer,
 
 		bytes_written += chunk;
 		address += chunk;
+
+		if (bytes_written >= next_progress && bytes_written < count) {
+			LOG_INFO("Written %" PRIu32 " of %" PRIu32 " bytes (%u%%)",
+				bytes_written, count,
+				(unsigned int)(bytes_written * 100 / count));
+			next_progress += WB32_SECTOR_SIZE * 16;
+		}
 	}
 
 	return ERROR_OK;
@@ -901,8 +910,8 @@ static int wb32f10x_erase_check(struct flash_bank *bank)
 static int wb32f10x_protect(struct flash_bank *bank, int set,
 	unsigned int first, unsigned int last)
 {
-	LOG_WARNING("WB32F10x flash protection not implemented");
-	return ERROR_OK;
+	LOG_ERROR("WB32F10x flash protection not supported");
+	return ERROR_FLASH_OPER_UNSUPPORTED;
 }
 
 static int wb32f10x_protect_check(struct flash_bank *bank)
