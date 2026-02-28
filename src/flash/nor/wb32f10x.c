@@ -136,7 +136,12 @@ struct wb32f10x_flash_bank {
 	uint32_t sram_size;
 };
 
-/* Flash size lookup table based on SYS_MEMSZ[3:0] */
+/*
+ * Flash size lookup tables based on SYS_MEMSZ[3:0].
+ *
+ * WB32F10x and WB32FQ95xx use different encodings for the same
+ * register field, so we need separate tables.
+ */
 static const struct {
 	uint8_t code;
 	uint32_t flash_size;
@@ -147,6 +152,15 @@ static const struct {
 	{ 0x07,  64 * 1024 },
 	{ 0x0F, 192 * 1024 },
 	{ 0x00,  32 * 1024 },
+};
+
+static const struct {
+	uint8_t code;
+	uint32_t flash_size;
+} wb32fq95x_flash_sizes[] = {
+	{ 0x00, 256 * 1024 },
+	{ 0x01, 128 * 1024 },
+	{ 0x03, 256 * 1024 },
 };
 
 /*
@@ -575,12 +589,24 @@ cleanup:
 	return retval;
 }
 
-static uint32_t wb32f10x_get_flash_size(uint8_t code)
+static uint32_t wb32f10x_get_flash_size(uint8_t code, uint8_t chip_id)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(wb32f10x_flash_sizes) - 1; i++) {
+	if (chip_id == CHIP_ID_WB32FQ95) {
+		for (size_t i = 0; i < ARRAY_SIZE(wb32fq95x_flash_sizes); i++) {
+			if (wb32fq95x_flash_sizes[i].code == code)
+				return wb32fq95x_flash_sizes[i].flash_size;
+		}
+		LOG_WARNING("Unknown WB32FQ95xx flash size code 0x%02x, "
+			"defaulting to 256 KB", code);
+		return 256 * 1024;
+	}
+
+	for (size_t i = 0; i < ARRAY_SIZE(wb32f10x_flash_sizes); i++) {
 		if (wb32f10x_flash_sizes[i].code == code)
 			return wb32f10x_flash_sizes[i].flash_size;
 	}
+	LOG_WARNING("Unknown WB32F10x flash size code 0x%02x, "
+		"defaulting to 32 KB", code);
 	return 32 * 1024;
 }
 
@@ -679,7 +705,7 @@ static int wb32f10x_probe(struct flash_bank *bank)
 	}
 	flash_code = sys_memsz & 0x0F;
 
-	wb32_info->flash_size = wb32f10x_get_flash_size(flash_code);
+	wb32_info->flash_size = wb32f10x_get_flash_size(flash_code, wb32_info->chip_id);
 	wb32_info->sram_size = wb32f10x_get_sram_size(sys_memsz);
 
 	LOG_INFO("%s: Device ID=0x%08" PRIx32 ", Flash=%u KB, SRAM=%u KB",

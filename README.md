@@ -1,8 +1,19 @@
 # EMulators OpenOCD Fork
-This is a fork of OpenOCD with a custom flash driver for WB32 devices and
-configurations for various WB32 devices. Debugging, Flashing, etc should
-all be working but I need to complete cleaning up the code before submitting
-to upstream. If you run into any issues please open a ticket!
+This is a fork of OpenOCD with support for Westberry Tech WB32 microcontrollers.
+Includes a custom flash driver and target configurations for the WB32F10x
+(WB32F101-WB32F105) and WB32FQ95xx families. Debugging, flashing, and
+verification are all working. If you run into any issues please open a ticket!
+
+Community documentation: https://github.com/emolitor/WestberryTech-WB32
+
+## Supported WB32 Devices
+
+| Family | Variants | Flash | SRAM | Core |
+|--------|----------|-------|------|------|
+| WB32F10x | WB32F101-WB32F105 | 32-256 KB | 8-36 KB | Cortex-M3 r2p0 |
+| WB32FQ95xx | WB32FQ95xC | 128-256 KB | 12-36 KB | Cortex-M3 r2p0 |
+
+Compatible debug probes: CMSIS-DAP, J-Link, WB-Link PRO (SWD and JTAG).
 
 ## To Build
 ```shell
@@ -11,7 +22,7 @@ to upstream. If you run into any issues please open a ticket!
 make
 ```
 
-## Example for flashing WB32F10X
+## Example: Flashing WB32F10x
 ```shell
 openocd -f interface/cmsis-dap.cfg -f target/wb32f10x.cfg \
    -c "init; halt; flash probe 0" \
@@ -20,7 +31,7 @@ openocd -f interface/cmsis-dap.cfg -f target/wb32f10x.cfg \
    -c "reset run; shutdown"
 ```
 
-## Example for flashing WB32FQ95
+## Example: Flashing WB32FQ95xx
 ```shell
 openocd -f interface/cmsis-dap.cfg -f target/wb32fq95x.cfg \
    -c "init; halt; flash probe 0" \
@@ -28,6 +39,19 @@ openocd -f interface/cmsis-dap.cfg -f target/wb32fq95x.cfg \
    -c "verify_image firmware.bin 0x08000000" \
    -c "reset run; shutdown"
 ```
+
+## WB32 TCL Helper Commands
+
+After connecting to a target, the following commands are available:
+
+| Command | Description |
+|---------|-------------|
+| `wb32_info` | Display device family, SYS_ID, flash/SRAM sizes |
+| `wb32_dump_flash <file> [length]` | Dump flash to file (default 4KB) |
+| `wb32_dump_all_flash <file>` | Dump entire flash (auto-detects size) |
+| `wb32_verify_flash <file>` | Verify flash contents against file |
+| `wb32_load_ram <file> [addr]` | Load binary into RAM (default 0x20000000) |
+| `wb32f10x mass_erase <bank>` | Erase entire flash |
 
 # Welcome to OpenOCD
 
